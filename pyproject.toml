@@ -1,27 +1,43 @@
-[tool.poetry]
+[project]
 name = "manga-grabber-tools"
-version = "0.1.0"
-description = "CLI wrapper for manga-grabber with batch download support"
-authors = ["Nikita Bystrov <bystrovno@basealt.ru>"]
+description = "A simple manga/ranobe downloader written in Python"
+dynamic = ["version"]
+authors = [
+    {name = "Nikita Bystrov", email = "bystrovno@basealt.ru"}
+]
 readme = "README.md"
 license = "MIT"
-packages = [
-    { include = "manga_grabber" },
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp",
+    "beautifulsoup4",
+    "fpdf2",
+    "pillow",
+    "natsort",
+    "fonttools",
+    "ebooklib",
+    "click",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Framework :: aiohttp",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
-# 🔥 Отключаем режим пакета (если не публикуем в PyPI)
-package-mode = false
+[project.scripts]
+mangagrabber = "manga_grabber.main:main"
 
-[tool.poetry.dependencies]
-python = ">=3.10"
-aiohttp = "*"
-beautifulsoup4 = "*"
-fpdf2 = "*"
-pillow = "*"
-natsort = "*"
-fonttools = "*"
-ebooklib = "*"
-click = "*"
+# 🔥 Poetry-specific настройки (только зависимости и плагины)
+[tool.poetry]
+package-mode = false
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -35,15 +51,15 @@ pytest = "*"
 pytest-asyncio = "*"
 coverage = "*"
 
-# 🔥 poetry-dynamic-versioning (если нужно авто-версионирование)
+# 🔥 poetry-dynamic-versioning (для авто-версий из git-тегов)
 [tool.poetry-dynamic-versioning]
-enable = false  # ⚠️ Отключено для простоты CI
+enable = true
 bump = true
 style = "pep440"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
 # Настройки pytest
 [tool.pytest.ini_options]
