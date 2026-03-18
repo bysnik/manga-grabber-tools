@@ -1,9 +1,9 @@
 [project]
 name = "manga-grabber-tools"
-description = "A simple manga/ranobe downloader written in Python"
+description = "CLI wrapper for manga-grabber with batch download support"
 dynamic = ["version"]
 authors = [
-    {name = "qwertyadrian", email = "me@qwertyadrian.ru"}
+    {name = "Nikita Bystrov", email = "bystrovno@basealt.ru"}
 ]
 readme = "README.md"
 license = "MIT"
@@ -18,30 +18,18 @@ dependencies = [
     "ebooklib",
     "click",
 ]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Framework :: AsyncIO",
-    "Framework :: aiohttp",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Internet",
-    "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules"
-]
 
 [project.scripts]
 mangagrabber = "manga_grabber.main:main"
 
-# Poetry-specific настройки
+# Poetry settings
 [tool.poetry]
 version = "0.1.0"
-package-mode = false
+
+# 🔥 Добавить секцию packages:
+[[tool.poetry.packages]]
+include = "manga_grabber"
+from = "."
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"
@@ -55,18 +43,14 @@ pytest = "^8.0.0"
 pytest-asyncio = "^0.24.0"
 coverage = "^7.4.0"
 
-# ❌ УДАЛЕНО: [tool.poetry.requires-plugins] — не существует!
-# ❌ УДАЛЕНО: poetry-dynamic-versioning — ломает CI
+# ❌ УДАЛИТЬ: [tool.poetry.requires-plugins] — не существует!
+# ❌ УДАЛИТЬ: [tool.poetry-dynamic-versioning] — ломает CI
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-# Настройки pytest
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "module"
 timeout = 300
-filterwarnings = [
-    "ignore::DeprecationWarning",
-]
