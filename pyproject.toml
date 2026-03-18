@@ -1,45 +1,27 @@
-[project]
-name = "manga-grabber"
-description = "A simple manga/ranobe downloader written in Python"
-dynamic = ["version"]
-authors = [
-    {name = "qwertyadrian", email = "me@qwertyadrian.ru"}
-]
+[tool.poetry]
+name = "manga-grabber-tools"
+version = "0.1.0"
+description = "CLI wrapper for manga-grabber with batch download support"
+authors = ["Nikita Bystrov <bystrovno@basealt.ru>"]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10"
-dependencies = [
-    "aiohttp",
-    "beautifulsoup4",
-    "fpdf2",
-    "pillow",
-    "natsort",
-    "fonttools",
-    "ebooklib",
-    "click",
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Framework :: AsyncIO",
-    "Framework :: aiohttp",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Internet",
-    "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules"
+packages = [
+    { include = "manga_grabber" },
 ]
 
-[project.scripts]
-mangagrabber = "manga_grabber.__main__:main"
+# 🔥 Отключаем режим пакета (если не публикуем в PyPI)
+package-mode = false
 
-[tool.poetry]
-version = "0.0.0"
+[tool.poetry.dependencies]
+python = ">=3.10"
+aiohttp = "*"
+beautifulsoup4 = "*"
+fpdf2 = "*"
+pillow = "*"
+natsort = "*"
+fonttools = "*"
+ebooklib = "*"
+click = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -53,14 +35,33 @@ pytest = "*"
 pytest-asyncio = "*"
 coverage = "*"
 
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
-
+# 🔥 poetry-dynamic-versioning (если нужно авто-версионирование)
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false  # ⚠️ Отключено для простоты CI
 bump = true
 style = "pep440"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# Настройки pytest
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "module"
+timeout = 300
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+# Настройки black
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312', 'py313']
+
+# Настройки mypy
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
