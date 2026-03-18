@@ -3,6 +3,7 @@ name = "manga-grabber-tools"
 description = "CLI wrapper for manga-grabber with batch download support"
 dynamic = ["version"]
 authors = [
+    {name = "qwertyadrian", email = "me@qwertyadrian.ru"},
     {name = "Nikita Bystrov", email = "bystrovno@basealt.ru"}
 ]
 readme = "README.md"
