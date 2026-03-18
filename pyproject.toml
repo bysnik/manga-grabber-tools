@@ -1,5 +1,5 @@
 [project]
-name = "manga-grabber"
+name = "manga-grabber-tools"
 description = "A simple manga/ranobe downloader written in Python"
 dynamic = ["version"]
 authors = [
@@ -36,30 +36,37 @@ classifiers = [
 ]
 
 [project.scripts]
-mangagrabber = "manga_grabber.__main__:main"
+mangagrabber = "manga_grabber.main:main"
 
+# Poetry-specific настройки
 [tool.poetry]
-version = "0.0.0"
+version = "0.1.0"
+package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-mypy = "*"
-types-beautifulsoup4 = "*"
-types-fpdf2 = "*"
+black = "^24.0.0"
+mypy = "^1.0.0"
+types-beautifulsoup4 = "^4.12.0"
+types-fpdf2 = "^2.7.0"
+pytest-timeout = "^2.4.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "*"
-pytest-asyncio = "*"
-coverage = "*"
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+coverage = "^7.4.0"
 
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
-
-[tool.poetry-dynamic-versioning]
-enable = true
-bump = true
-style = "pep440"
+# ❌ УДАЛЕНО: [tool.poetry.requires-plugins] — не существует!
+# ❌ УДАЛЕНО: poetry-dynamic-versioning — ломает CI
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# Настройки pytest
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "module"
+timeout = 300
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
