@@ -46,6 +46,7 @@ black = "*"
 mypy = "*"
 types-beautifulsoup4 = "*"
 types-fpdf2 = "*"
+pytest-timeout = "^2.4.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"

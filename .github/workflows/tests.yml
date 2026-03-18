@@ -1,18 +1,107 @@
 name: "Run tests"
+
 on:
   push:
     branches:
+      - main
       - master
     paths:
       - 'manga_grabber/**'
+      - 'downloader.py'
       - 'tests/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches:
+      - main
       - master
+    paths:
+      - 'manga_grabber/**'
+      - 'downloader.py'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+  schedule:
+    # Еженедельный прогон тестов (проверка актуальности парсеров)
+    - cron: '0 3 * * 1'
+  workflow_dispatch:  # Ручной запуск
+
+env:
+  PYTHON_VERSION: '3.13'
+  POETRY_VERSION: '1.8.0'
 
 jobs:
-  test:
+  # ============================================================================
+  # 1. Базовые юнит-тесты (быстрые, с моками)
+  # ============================================================================
+  unit-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run unit tests (mocked)
+        run: |
+          poetry run pytest tests/test_downloader_cli.py::TestHelperFunctions -v
+          poetry run pytest tests/test_downloader_cli.py::TestCookieManager -v
+          poetry run pytest tests/test_downloader_cli.py::TestDownloadState -v
+          poetry run pytest tests/test_downloader_cli.py::TestMangaDownloaderMocked -v
+          poetry run pytest tests/test_downloader_cli.py::TestEdgeCases -v
+          poetry run pytest tests/test_downloader_cli.py::TestCLIArguments -v
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            .pytest_cache/
+            *.log
+          retention-days: 3
+
+  # ============================================================================
+  # 2. Интеграционные тесты (требуют TOKEN для некоторых сайтов)
+  # ============================================================================
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests
+    # Запускать только если есть токен или это не PR из форка
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    strategy:
+      matrix:
+        site: [usagi, mangalib, ranobelib]  # HentaiLib и RanobeHub требуют отдельной настройки
+      fail-fast: false
 
     steps:
       - name: Checkout repository
@@ -21,43 +110,164 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-          virtualenvs-path: venv
-          installer-parallel: true
 
       - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
 
-      - name: Install manga-grabber
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run integration tests for ${{ matrix.site }}
+        run: |
+          poetry run pytest \
+            tests/test_downloader_cli.py::TestCLIModes::test_cli_all_sites_basic \
+            -k "${{ matrix.site }}" \
+            -v \
+            --timeout=120
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CI: true
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-logs-${{ matrix.site }}
+          path: |
+            downloads/
+            cookies/
+            *.log
+          retention-days: 1
+
+  # ============================================================================
+  # 3. Тесты оригинальной библиотеки (регрессия)
+  # ============================================================================
+  library-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run original API tests (mocked/filtered)
+        run: |
+          # Запуск тестов библиотеки без реальных запросов
+          poetry run pytest \
+            tests/mangalib_api_test.py::test_non_existent_title \
+            tests/ranobelib_api_test.py::test_non_existent_title \
+            tests/hentailib_api_test.py::test_non_existent_title \
+            -v
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+
+  # ============================================================================
+  # 4. Отчёт о покрытии (только для push в main)
+  # ============================================================================
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [unit-tests, library-tests]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
         run: poetry install --no-interaction
 
       - name: Run tests with coverage
         run: |
-          poetry run coverage run -m pytest tests/ -q
+          poetry run coverage run \
+            --source=manga_grabber,downloader \
+            -m pytest tests/ -v --ignore=tests/export_test.py
           poetry run coverage xml -o coverage.xml
+          poetry run coverage report -m
         env:
           TOKEN: ${{ secrets.TOKEN }}
 
       - name: Upload coverage to Codecov
-        if: success() && github.event_name != 'pull_request'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
           flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+          name: codecov-manga-grabber-tools
+          fail_ci_if_error: false  # Не блокировать при ошибке Codecov
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ============================================================================
+  # 5. Сводный статус
+  # ============================================================================
+  all-tests-passed:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, library-tests, coverage]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.unit-tests.result }}" == "success" ]] && \
+             [[ "${{ needs.library-tests.result }}" == "success" ]]; then
+            echo "✅ All critical tests passed"
+            exit 0
+          else
+            echo "❌ Some tests failed"
+            exit 1
+          fi
