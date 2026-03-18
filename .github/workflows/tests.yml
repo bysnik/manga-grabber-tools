@@ -66,6 +66,11 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
+      - name: Install project in editable mode
+        run: |
+          # Установить пакет в editable-режиме, даже с package-mode = false
+          poetry run pip install -e .
+
       - name: Install project
         run: poetry install --no-interaction
 
@@ -128,6 +133,11 @@ jobs:
         if: steps.cache-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
+      - name: Install project in editable mode
+        run: |
+          # Установить пакет в editable-режиме, даже с package-mode = false
+          poetry run pip install -e .
+
       - name: Install project
         run: poetry install --no-interaction
 
@@ -186,6 +196,11 @@ jobs:
         if: steps.cache-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction
 
+      - name: Install project in editable mode
+        run: |
+          # Установить пакет в editable-режиме, даже с package-mode = false
+          poetry run pip install -e .
+
       - name: Install project
         run: poetry install --no-interaction
 
@@ -232,6 +247,11 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --no-interaction
+
+      - name: Install project in editable mode
+        run: |
+          # Установить пакет в editable-режиме, даже с package-mode = false
+          poetry run pip install -e .
 
       - name: Run tests with coverage
         run: |
