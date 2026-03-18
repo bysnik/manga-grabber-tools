@@ -113,5 +113,5 @@ poetry cache clear . --all
 
 ---
 
-> 📜 Лицензия: **MIT**  
-> Оригинал: [manga-grabber](https://github.com/qwertyadrian/manga-grabber) by Adrian Polyakov  
+> 📜 Лицензия: **MIT**
+> Оригинал: [manga-grabber](https://github.com/qwertyadrian/manga-grabber) by Adrian Polyakov
