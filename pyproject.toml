@@ -1,9 +1,9 @@
 [project]
-name = "manga-grabber-tools"
-description = "CLI wrapper for manga-grabber with batch download support"
+name = "manga-grabber"
+description = "A simple manga/ranobe downloader written in Python"
 dynamic = ["version"]
 authors = [
-    {name = "Nikita Bystrov", email = "bystrovno@basealt.ru"}
+    {name = "qwertyadrian", email = "me@qwertyadrian.ru"}
 ]
 readme = "README.md"
 license = "MIT"
@@ -28,54 +28,38 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 [project.scripts]
-mangagrabber = "manga_grabber.main:main"
+mangagrabber = "manga_grabber.__main__:main"
 
-# Poetry-specific настройки
 [tool.poetry]
-package-mode = false
+version = "0.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.0.0"
-mypy = "^1.0.0"
-types-beautifulsoup4 = "^4.12.0"
-types-fpdf2 = "^2.7.0"
-pytest-timeout = "^2.4.0"
+black = "*"
+mypy = "*"
+types-beautifulsoup4 = "*"
+types-fpdf2 = "*"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.0.0"
-pytest-asyncio = "^0.24.0"
-coverage = "^7.4.0"
+pytest = "*"
+pytest-asyncio = "*"
+coverage = "*"
 
-# Отключаем poetry-dynamic-versioning для простоты CI
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
+bump = true
+style = "pep440"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-# Настройки pytest
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "module"
-timeout = 300
-filterwarnings = [
-    "ignore::DeprecationWarning",
-]
-
-# Настройки black
-[tool.black]
-line-length = 88
-target-version = ['py310', 'py311', 'py312', 'py313']
-
-# Настройки mypy
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
