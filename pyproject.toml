@@ -1,6 +1,6 @@
 [project]
 name = "manga-grabber-tools"
-description = "A simple manga/ranobe downloader written in Python"
+description = "CLI wrapper for manga-grabber with batch download support"
 dynamic = ["version"]
 authors = [
     {name = "Nikita Bystrov", email = "bystrovno@basealt.ru"}
@@ -35,31 +35,29 @@ classifiers = [
 [project.scripts]
 mangagrabber = "manga_grabber.main:main"
 
-# 🔥 Poetry-specific настройки (только зависимости и плагины)
+# Poetry-specific настройки
 [tool.poetry]
 package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-mypy = "*"
-types-beautifulsoup4 = "*"
-types-fpdf2 = "*"
+black = "^24.0.0"
+mypy = "^1.0.0"
+types-beautifulsoup4 = "^4.12.0"
+types-fpdf2 = "^2.7.0"
 pytest-timeout = "^2.4.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "*"
-pytest-asyncio = "*"
-coverage = "*"
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+coverage = "^7.4.0"
 
-# 🔥 poetry-dynamic-versioning (для авто-версий из git-тегов)
+# Отключаем poetry-dynamic-versioning для простоты CI
 [tool.poetry-dynamic-versioning]
-enable = true
-bump = true
-style = "pep440"
+enable = false
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 # Настройки pytest
 [tool.pytest.ini_options]
