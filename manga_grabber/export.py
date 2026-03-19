@@ -94,8 +94,7 @@ def html_to_pdf(html_dir: Path):
 
     for html_file in html_files:
         # Load the HTML file
-        with open(html_file, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        html_content = html_file.read_text(encoding="utf-8")
 
         soup = BeautifulSoup(html_content, "html.parser")
         # Set images width to fit the page
@@ -145,8 +144,7 @@ def html_to_epub(html_dir: Path):
 
     for idx, html_file in enumerate(html_files, start=1):
         # Read HTML content
-        with open(html_file, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        html_content = html_file.read_text(encoding="utf-8")
 
         # Parse HTML to extract title
         soup = BeautifulSoup(html_content, "html.parser")
@@ -166,8 +164,7 @@ def html_to_epub(html_dir: Path):
                 img_path = html_dir / img_src
                 if img_path.exists():
                     # Read image file
-                    with open(img_path, "rb") as img_file:
-                        img_content = img_file.read()
+                    img_content = img_path.read_bytes()
 
                     # Create EPUB image item
                     epub_img = epub.EpubItem(
