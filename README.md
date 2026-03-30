@@ -45,7 +45,7 @@ mkdir -p cookies
 https://mangalib.me/ru/manga/12345--title-name
 https://ranobelib.me/ru/1234--title-name/
 ```
-
+ 
 ---
 
 ## ▶️ Запуск
