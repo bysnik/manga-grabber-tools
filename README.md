@@ -15,8 +15,8 @@ git clone git@github.com:bysnik/manga-grabber-tools.git && cd manga-grabber-tool
 
 # 2. Установить Poetry (если нет)
 pip3 install pipx
-pipx install poetry
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+pipx install poetry
 
 # 3. Установить зависимости
 poetry install
