@@ -221,7 +221,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    #if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [unit-tests, library-tests]
 
     steps:
@@ -263,14 +263,14 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-manga-grabber-tools
-          fail_ci_if_error: false  # Не блокировать при ошибке Codecov
-          token: ${{ secrets.CODECOV_TOKEN }}
+      #- name: Upload coverage to Codecov
+      #  uses: codecov/codecov-action@v5
+      #  with:
+      #    files: ./coverage.xml
+      #    flags: unittests
+      #    name: codecov-manga-grabber-tools
+      #    fail_ci_if_error: false  # Не блокировать при ошибке Codecov
+      #    token: ${{ secrets.CODECOV_TOKEN }}
 
   # ============================================================================
   # 5. Сводный статус
