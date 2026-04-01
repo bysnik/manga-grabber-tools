@@ -112,12 +112,87 @@ class MangaLib(BaseGrabber):
 
 @register_grabber("hentailib.me")
 class HentaiLib(MangaLib):
-    api_base_url: str = "https://hapi.hentaicdn.org/api"
-    resource_base_url = "https://img2h.hentaicdn.org"
+    api_base_url = "https://hapi.hentaicdn.org/api"
+    resource_base_url = "https://img3h.hentaicdn.org"
 
     def __init__(self, title_url: str, token: str | None = None):
         super().__init__(title_url, token)
         self._headers["Referer"] = "https://hentailib.me/"
+        self._headers["Accept"] = "application/json"
+
+    async def get_chapter_info(
+        self, chapter: int, volume: int, branch_id: int = 0
+    ) -> dict:
+        """
+        Получить информацию о главе (страницы) для hentailib.
+        Сначала пытается через API, затем через парсинг HTML.
+        """
+        # Получаем chapter_id из списка глав
+        chapters = await self.get_chapters()
+        target = None
+        for ch in chapters:
+            if ch["number"] == str(chapter) and ch["volume"] == str(volume):
+                target = ch
+                break
+        if not target:
+            raise ChapterInfoError(
+                f"Chapter {chapter} volume {volume} not found in list"
+            )
+        chapter_id = target["id"]
+
+        # Вариант 1: пробуем API-эндпоинт /chapter/{id}/pages
+        session = await self.session
+        pages_url = f"{self.api_base_url}/chapter/{chapter_id}/pages"
+        async with session.get(pages_url, headers=self._headers) as resp:
+            if resp.status == 200:
+                try:
+                    data = await resp.json()
+                    # Предполагаем, что data — это список страниц с полями 'uuid', 'extension' и т.д.
+                    pages = []
+                    for idx, page in enumerate(data, start=1):
+                        # Формируем URL по шаблону из HAR
+                        uuid = page.get("uuid")
+                        if uuid:
+                            ext = page.get("extension", "png")
+                            url = f"{self.resource_base_url}//manga/{self.manga_name}/chapters/{chapter_id}/{uuid}.{ext}"
+                            pages.append({"url": url, "slug": idx})
+                    if pages:
+                        return {"pages": pages}
+                except Exception:
+                    pass
+
+        # Вариант 2: парсим HTML страницы чтения
+        read_url = f"https://hentailib.me/ru/{self.manga_id}--{self.manga_name}/read/v{volume}/c{chapter}"
+        async with session.get(read_url, headers=self._headers) as resp:
+            if resp.status != 200:
+                raise ChapterInfoError(
+                    f"Failed to load chapter page: {resp.status}"
+                )
+            html = await resp.text()
+
+        # Ищем __NEXT_DATA__
+        import re, json
+        match = re.search(
+            r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.DOTALL
+        )
+        if not match:
+            raise ChapterInfoError("Could not find chapter data in HTML")
+        data = json.loads(match.group(1))
+
+        # Извлекаем страницы из структуры (зависит от версии сайта)
+        try:
+            pages_data = data["props"]["pageProps"]["chapter"]["pages"]
+        except (KeyError, TypeError):
+            raise ChapterInfoError("Could not extract pages from JSON")
+
+        pages = []
+        for idx, page in enumerate(pages_data, start=1):
+            uuid = page.get("uuid")
+            if uuid:
+                ext = page.get("extension", "png")
+                url = f"{self.resource_base_url}//manga/{self.manga_name}/chapters/{chapter_id}/{uuid}.{ext}"
+                pages.append({"url": url, "slug": idx})
+        return {"pages": pages}
 
 
 @register_grabber("ranobelib.me")
